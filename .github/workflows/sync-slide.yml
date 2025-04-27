@@ -1,4 +1,4 @@
-name: Sync Slide to GitHub Pages
+name: Sync Slide
 
 on:
   workflow_dispatch:
@@ -46,10 +46,10 @@ jobs:
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
-      - name: Upload exported bytes
+      - name: Upload exported files
         uses: actions/upload-artifact@v4
         with:
-          name: crunched-textures
+          name: temp-images
           path: "./temp-images"
 
       # - name: Crunch images
