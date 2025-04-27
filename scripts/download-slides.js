@@ -9,30 +9,24 @@ async function downloadSlides() {
   });
 
   const slides = google.slides({ version: "v1", auth });
-  // const drive = google.drive({ version: "v3", auth });
+  const slidesConfig = JSON.parse(process.env.SLIDES_CONFIG);
 
-  const slideUrls = process.env.SLIDE_URLS.split("\n").filter((url) =>
-    url.trim()
-  );
+  for (const config of slidesConfig) {
+    const { type, url } = config;
 
-  for (const url of slideUrls) {
     const presentationId = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)[1];
     const presentation = await slides.presentations.get({ presentationId });
 
-    const tempDir = `${process.env.TEMP_DIR}/${presentation.data.title}`;
+    const tempDir = `${process.env.TEMP_DIR}/${type}`;
     await fs.promises.mkdir(tempDir, { recursive: true });
 
     for (let i = 0; i < presentation.data.slides.length; i++) {
       const response = await slides.presentations.pages.getThumbnail({
         presentationId,
         pageObjectId: presentation.data.slides[i].objectId,
-        // thumbnailProperties: {
-        //   thumbnailSize: "LARGE",
-        // },
       });
 
       const imageUrl = response.data.contentUrl;
-      console.log("imageUrl", imageUrl);
       const imageResponse = await fetch(imageUrl);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 

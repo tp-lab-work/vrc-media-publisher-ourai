@@ -3,8 +3,8 @@ name: Sync Slide
 on:
   workflow_dispatch:
     inputs:
-      slide_urls:
-        description: "Google Slide URLs (one per line)"
+      slides:
+        description: 'Slides config in JSON format. Example: [{"type":"sample","url":"https://docs.google.com/presentation/d/xxx"}, ...]'
         required: true
         type: string
 #  repository_dispatch:
@@ -40,7 +40,7 @@ jobs:
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
-          SLIDE_URLS: ${{ inputs.slide_urls }}
+          SLIDE_CONFIG: ${{ inputs.slides }}
           TEMP_DIR: "./temp-images"
         run: |
           mkdir -p $TEMP_DIR
