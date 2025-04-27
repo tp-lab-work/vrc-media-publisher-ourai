@@ -1,0 +1,77 @@
+name: Sync Slide to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      slide_urls:
+        description: "Google Slide URLs (one per line)"
+        required: true
+        type: string
+#  repository_dispatch:
+#    types: [on-demand-sync-drive-files]
+
+jobs:
+  sync-slide:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create service account JSON file
+        run: |
+          echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service-account.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install packages
+        run: |
+          npm install google-auth-library @googleapis/slides
+        shell: bash
+      # - name: Install packages
+      #   run: |
+      #     npm install
+      #   shell: bash
+
+      - name: Download slides as images
+        env:
+          SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
+          SLIDE_URLS: ${{ inputs.slide_urls }}
+          TEMP_DIR: "./temp-images"
+        run: |
+          mkdir -p $TEMP_DIR
+          node ./scripts/download-slides.js
+
+      - name: Upload exported bytes
+        uses: actions/upload-artifact@v4
+        with:
+          name: crunched-textures
+          path: "./temp-images"
+
+      # - name: Crunch images
+      #   uses: tp-jp/unity-export-crunched-action@v1
+      #   with:
+      #     input-path: "./temp-images"
+      #     output-path: "./temp-images-crunched"
+      #     unity-email: ${{ secrets.UNITY_EMAIL }}
+      #     unity-password: ${{ secrets.UNITY_PASSWORD }}
+      #     unity-license: ${{ secrets.UNITY_LICENSE }}
+      #     unity-version: "2022.3.22f1"
+
+      # - name: Check for changes
+      #   run: |
+      #     git config --global user.email "action@github.com"
+      #     git config --global user.name "GitHub Action"
+
+      #     git add --all
+
+      #     if ! git diff-index --quiet HEAD --; then
+      #       git commit -m "Update images from Google Drive"
+      #       git push
+      #     else
+      #       echo "No changes to commit."
+      #     fi

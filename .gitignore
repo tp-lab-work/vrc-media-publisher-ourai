@@ -1,0 +1,8 @@
+# Node.js dependencies
+node_modules/
+
+# Package files
+package-lock.json
+
+# service action files
+service-account.json
