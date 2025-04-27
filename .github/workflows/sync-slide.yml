@@ -30,7 +30,7 @@ jobs:
 
       - name: Install packages
         run: |
-          npm install google-auth-library @googleapis
+          npm install google-auth-library googleapis
         shell: bash
       # - name: Install packages
       #   run: |
