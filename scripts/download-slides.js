@@ -7,7 +7,7 @@ async function downloadSlides() {
     scopes: ["https://www.googleapis.com/auth/presentations.readonly"],
   });
 
-  const slides = google.slides({ version: "v3", auth });
+  const slides = google.slides({ version: "v1", auth });
   // const drive = google.drive({ version: "v3", auth });
 
   const slideUrls = process.env.SLIDE_URLS.split("\n").filter((url) =>
