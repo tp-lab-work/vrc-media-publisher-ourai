@@ -1,5 +1,5 @@
 const { GoogleAuth } = require("google-auth-library");
-const { google } = require("@googleapis/slides");
+const { google } = require("@googleapis");
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
@@ -7,17 +7,17 @@ async function downloadSlides() {
     scopes: ["https://www.googleapis.com/auth/presentations.readonly"],
   });
 
-  const client = await auth.getClient();
-  const slides = google.slides({
-    version: "v1",
-    auth: client,
-  });
+  const slides = google.slides({ version: "v3", auth });
+  // const drive = google.drive({ version: "v3", auth });
 
   const slideUrls = process.env.SLIDE_URLS.split("\n").filter((url) =>
     url.trim()
   );
-
   console.log(slideUrls);
+
+  // デバッグ用にauth情報を確認
+  console.log("Slides API client created:", !!slides);
+
   // for (const url of slideUrls) {
   //   const presentationId = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)[1];
   //   const presentation = await slides.presentations.get({ presentationId });
