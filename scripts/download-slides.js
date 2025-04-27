@@ -26,9 +26,9 @@ async function downloadSlides() {
       const response = await slides.presentations.pages.getThumbnail({
         presentationId,
         pageObjectId: presentation.data.slides[i].objectId,
-        thumbnailProperties: {
-          thumbnailSize: "LARGE",
-        },
+        // thumbnailProperties: {
+        //   thumbnailSize: "LARGE",
+        // },
       });
 
       const imageUrl = response.data.contentUrl;
