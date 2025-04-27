@@ -1,5 +1,6 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
+const fs = require("fs");
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
