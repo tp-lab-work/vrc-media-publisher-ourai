@@ -59,11 +59,19 @@ jobs:
           max-size: "2048"
           compression-quality: "50"
 
+      - name: Combine images as Base64
+        env:
+          INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
+          OUTPUT_DIR: "./public/data"
+        run: |
+          mkdir -p $OUTPUT_DIR
+          node ./scripts/combine-images-base64.js
+
       - name: Upload exported files
         uses: actions/upload-artifact@v4
         with:
-          name: crunched-textures
-          path: ${{ env.TEMP_IMAGES_CRUNCHED }}
+          name: crunched-images
+          path: "./public/data"
 
       # - name: Check for changes
       #   run: |
