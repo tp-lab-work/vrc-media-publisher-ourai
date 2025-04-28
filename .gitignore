@@ -6,3 +6,10 @@ package-lock.json
 
 # service action files
 service-account.json
+
+# temporary files
+temp-images
+temp-images-crunched
+
+# actions
+unity-export-crunched-action

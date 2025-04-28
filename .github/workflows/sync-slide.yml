@@ -34,7 +34,7 @@ jobs:
 
       - name: Install packages
         run: |
-          npm install google-auth-library googleapis
+          npm install
         shell: bash
 
       - name: Download slides as images
