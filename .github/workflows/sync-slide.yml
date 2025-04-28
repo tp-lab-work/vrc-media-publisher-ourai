@@ -37,25 +37,15 @@ jobs:
           npm install google-auth-library googleapis
         shell: bash
 
-      - name: Setup Output Directory
-        run: |
-          mkdir -p ${{ env.TEMP_IMAGES }}
-          mkdir -p ${{ env.TEMP_IMAGES_CRUNCHED }}
-
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
           SLIDES_CONFIG: ${{ inputs.slides }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
+          TEMP_IMAGES_CRUNCHED: ${{ env.TEMP_IMAGES_CRUNCHED }}
         run: |
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
-
-      - name: Upload exported files
-        uses: actions/upload-artifact@v4
-        with:
-          name: temp-images
-          path: ${{ env.TEMP_IMAGES }}
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@main
@@ -66,8 +56,8 @@ jobs:
           unity-password: ${{ secrets.UNITY_PASSWORD }}
           unity-license: ${{ secrets.UNITY_LICENSE }}
           unity-version: "2022.3.22f1"
-          max-size: 2048
-          compression-quality: 50
+          max-size: "2048"
+          compression-quality: "50"
 
       - name: Upload exported files
         uses: actions/upload-artifact@v4
