@@ -62,27 +62,28 @@ jobs:
       - name: Combine images as Base64
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
-          OUTPUT_DIR: "./public/data"
+          OUTPUT_DIR: "./public/slides"
         run: |
           mkdir -p $OUTPUT_DIR
+          rm -rf $OUTPUT_DIR/*
           node ./scripts/combine-images-base64.js
 
       - name: Upload exported files
         uses: actions/upload-artifact@v4
         with:
           name: crunched-images
-          path: "./public/data"
+          path: "./public/slides"
 
-      # - name: Check for changes
-      #   run: |
-      #     git config --global user.email "action@github.com"
-      #     git config --global user.name "GitHub Action"
+      - name: Check for changes
+        run: |
+          git config --global user.email "action@github.com"
+          git config --global user.name "GitHub Action"
 
-      #     git add --all
+          git add --all
 
-      #     if ! git diff-index --quiet HEAD --; then
-      #       git commit -m "Update images from Google Drive"
-      #       git push
-      #     else
-      #       echo "No changes to commit."
-      #     fi
+          if ! git diff-index --quiet HEAD --; then
+            git commit -m "Update images from Google Drive"
+            git push
+          else
+            echo "No changes to commit."
+          fi

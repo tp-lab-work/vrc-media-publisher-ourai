@@ -51,4 +51,4 @@ async function combineImagesBase64() {
   }
 }
 
-combineImagesBase64().catch(console.error);
+combineImagesBase64();
