@@ -19,10 +19,10 @@ async function combineImagesBase64() {
       const inputFolder = path.join(inputDir, folder);
       const outputFile = path.join(outputDir, `${folder}.txt`);
 
-      // フォルダ内のPNG画像を取得してソート
+      // フォルダ内のCRNファイルを取得してソート
       const files = await fs.readdir(inputFolder);
       const images = files
-        .filter((file) => file.endsWith(".png"))
+        .filter((file) => file.endsWith(".crn"))
         .sort((a, b) => {
           const numA = parseInt(a.match(/\d+/)[0]);
           const numB = parseInt(b.match(/\d+/)[0]);
