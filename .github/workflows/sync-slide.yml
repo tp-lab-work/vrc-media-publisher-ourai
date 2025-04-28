@@ -10,6 +10,10 @@ on:
 #  repository_dispatch:
 #    types: [on-demand-sync-drive-files]
 
+env:
+  TEMP_IMAGES: temp-images
+  TEMP_IMAGES_CRUNCHED: temp-images-crunched
+
 jobs:
   sync-slide:
     runs-on: ubuntu-latest
@@ -32,16 +36,17 @@ jobs:
         run: |
           npm install google-auth-library googleapis
         shell: bash
-      # - name: Install packages
-      #   run: |
-      #     npm install
-      #   shell: bash
+
+      - name: Setup Output Directory
+        run: |
+          mkdir -p ${{ env.TEMP_IMAGES }}
+          mkdir -p ${{ env.TEMP_IMAGES_CRUNCHED }}
 
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
           SLIDES_CONFIG: ${{ inputs.slides }}
-          TEMP_DIR: "./temp-images"
+          TEMP_DIR: ${{ env.TEMP_IMAGES }}
         run: |
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
@@ -50,17 +55,25 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: temp-images
-          path: "./temp-images"
+          path: ${{ env.TEMP_IMAGES }}
 
-      # - name: Crunch images
-      #   uses: tp-jp/unity-export-crunched-action@v1
-      #   with:
-      #     input-path: "./temp-images"
-      #     output-path: "./temp-images-crunched"
-      #     unity-email: ${{ secrets.UNITY_EMAIL }}
-      #     unity-password: ${{ secrets.UNITY_PASSWORD }}
-      #     unity-license: ${{ secrets.UNITY_LICENSE }}
-      #     unity-version: "2022.3.22f1"
+      - name: Crunch images
+        uses: tp-jp/unity-export-crunched-action@main
+        with:
+          input-path: ${{ env.TEMP_IMAGES }}
+          output-path: ${{ env.TEMP_IMAGES_CRUNCHED }}
+          unity-email: ${{ secrets.UNITY_EMAIL }}
+          unity-password: ${{ secrets.UNITY_PASSWORD }}
+          unity-license: ${{ secrets.UNITY_LICENSE }}
+          unity-version: "2022.3.22f1"
+          max-size: 2048
+          compression-quality: 50
+
+      - name: Upload exported files
+        uses: actions/upload-artifact@v4
+        with:
+          name: crunched-textures
+          path: ${{ env.TEMP_IMAGES_CRUNCHED }}
 
       # - name: Check for changes
       #   run: |
