@@ -10,7 +10,7 @@ on:
 
   repository_dispatch:
     types:
-      - sync-slides-manual
+      - sync-slides
 
 env:
   TEMP_IMAGES: temp-images
