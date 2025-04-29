@@ -34,14 +34,14 @@ async function combineImagesBase64() {
       for (const image of images) {
         const imagePath = path.join(inputFolder, image);
         const imageBuffer = await fs.readFile(imagePath);
-        base64Array.push(imageBuffer.toString("base64"));
+        // base64Array.push(imageBuffer.toString("base64"));
 
-        // const match = filename.match(/_(\d+)x(\d+)\./);
-        // const width = parseInt(match[1], 10);
-        // const height = parseInt(match[2], 10);
-        // base64Array.push(
-        //   width + "\n" + height + "\n" + imageBuffer.toString("base64")
-        // );
+        const match = filename.match(/_(\d+)x(\d+)\./);
+        const width = parseInt(match[1], 10);
+        const height = parseInt(match[2], 10);
+        base64Array.push(
+          width + "\n" + height + "\n" + imageBuffer.toString("base64")
+        );
       }
 
       // 指定フォーマットで保存

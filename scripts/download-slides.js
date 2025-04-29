@@ -30,7 +30,6 @@ async function downloadSlides() {
       const imageUrl = response.data.contentUrl;
       const imageResponse = await fetch(imageUrl);
       const result = await probe(imageUrl);
-      console.log("probe", result);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
       await fs.promises.writeFile(

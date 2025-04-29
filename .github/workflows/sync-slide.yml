@@ -36,10 +36,15 @@ jobs:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
           SLIDES_CONFIG: ${{ toJSON(github.event.client_payload.slides) }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
-          TEMP_IMAGES_CRUNCHED: ${{ env.TEMP_IMAGES_CRUNCHED }}
         run: |
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
+
+      - name: Upload images
+        uses: actions/upload-artifact@v4
+        with:
+          name: crunched-textures
+          path: ${{ env.TEMP_IMAGES }}
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@main
