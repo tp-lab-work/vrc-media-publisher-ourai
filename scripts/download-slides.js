@@ -1,6 +1,6 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
-const { probe } = require("probe-image-size");
+const probe = require("probe-image-size");
 const fs = require("fs");
 
 async function downloadSlides() {
