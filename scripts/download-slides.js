@@ -1,6 +1,5 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
-const probe = require("probe-image-size");
 const fs = require("fs");
 
 async function downloadSlides() {
@@ -29,7 +28,6 @@ async function downloadSlides() {
 
       const imageUrl = response.data.contentUrl;
       const imageResponse = await fetch(imageUrl);
-      const result = await probe(imageUrl);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
       await fs.promises.writeFile(

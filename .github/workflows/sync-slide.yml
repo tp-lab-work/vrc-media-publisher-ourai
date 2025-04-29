@@ -40,12 +40,6 @@ jobs:
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
-      - name: Upload images
-        uses: actions/upload-artifact@v4
-        with:
-          name: crunched-textures
-          path: ${{ env.TEMP_IMAGES }}
-
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@main
         with:
@@ -57,6 +51,12 @@ jobs:
           unity-version: "2022.3.22f1"
           max-size: "2048"
           compression-quality: "50"
+
+      - name: Upload crunched images
+        uses: actions/upload-artifact@v4
+        with:
+          name: crunched-images
+          path: ${{ env.TEMP_IMAGES_CRUNCHED }}
 
       - name: Combine images as Base64
         env:

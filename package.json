@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "google-auth-library": "^9.15.1",
-    "googleapis": "^148.0.0",
-    "probe-image-size": "^7.2.3"
+    "googleapis": "^148.0.0"
   }
 }
