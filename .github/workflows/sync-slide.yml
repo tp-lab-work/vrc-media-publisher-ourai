@@ -1,16 +1,15 @@
 name: Sync Slide
 
 on:
-  workflow_dispatch:
-    inputs:
-      slides:
-        description: 'Slides config in JSON format. Example: [{"type":"sample","url":"https://docs.google.com/presentation/d/xxx"}, ...]'
-        required: true
-        type: string
+  #  workflow_dispatch:
+  #    inputs:
+  #      slides:
+  #        description: 'Slides config in JSON format. Example: [{"type":"sample","url":"https://docs.google.com/presentation/d/xxx"}, ...]'
+  #        required: true
+  #        type: string
 
   repository_dispatch:
-    types:
-      - sync-slides
+    types: [sync-slides]
 
 env:
   TEMP_IMAGES: temp-images
@@ -42,7 +41,7 @@ jobs:
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
-          SLIDES_CONFIG: ${{ github.event_name == 'workflow_dispatch' && inputs.slides || github.event.client_payload.slides }}
+          SLIDES_CONFIG: ${{ github.event.client_payload.slides }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
           TEMP_IMAGES_CRUNCHED: ${{ env.TEMP_IMAGES_CRUNCHED }}
         run: |
