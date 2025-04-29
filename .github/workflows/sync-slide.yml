@@ -36,6 +36,8 @@ jobs:
       - name: Install packages
         run: |
           npm install
+          echo ${{ github.event }}
+          echo ${{ github.event.client_payload }}
         shell: bash
 
       - name: Download slides as images
