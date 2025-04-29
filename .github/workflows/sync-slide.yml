@@ -1,13 +1,6 @@
 name: Sync Slide
 
 on:
-  #  workflow_dispatch:
-  #    inputs:
-  #      slides:
-  #        description: 'Slides config in JSON format. Example: [{"type":"sample","url":"https://docs.google.com/presentation/d/xxx"}, ...]'
-  #        required: true
-  #        type: string
-
   repository_dispatch:
     types: [sync-slides]
 
