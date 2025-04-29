@@ -31,9 +31,7 @@ async function downloadSlides() {
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
       await fs.promises.writeFile(
-        `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}_${
-          result.width
-        }x${result.height}.png`,
+        `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}.png`,
         buffer
       );
     }
