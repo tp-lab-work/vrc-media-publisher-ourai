@@ -42,7 +42,7 @@ jobs:
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
-          SLIDES_CONFIG: ${{ inputs.slides }}
+          SLIDES_CONFIG: ${{ github.event_name == 'workflow_dispatch' && inputs.slides || github.event.client_payload.slides }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
           TEMP_IMAGES_CRUNCHED: ${{ env.TEMP_IMAGES_CRUNCHED }}
         run: |
