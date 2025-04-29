@@ -62,12 +62,6 @@ jobs:
           rm -rf $OUTPUT_DIR/*
           node ./scripts/combine-images-base64.js
 
-      - name: Upload exported files
-        uses: actions/upload-artifact@v4
-        with:
-          name: crunched-images
-          path: "./public/slides"
-
       - name: Check for changes
         run: |
           git config --global user.email "action@github.com"
@@ -81,3 +75,13 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
+      - name: Notify completion
+        if: always()
+        run: |
+          status="${{ job.status == 'success' && 'completed' || 'failed' }}"
+          error="${{ job.status != 'success' && job.status || '' }}"
+
+          curl -X POST ${{ secrets.APP_URL }}/api/slides/sync/webhook \
+            -H "Content-Type: application/json" \
+            -d "{\"syncId\": \"${{ github.event.client_payload.syncId }}\", \"status\": \"$status\", \"error\": \"$error\"}"
