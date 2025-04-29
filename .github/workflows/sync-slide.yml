@@ -36,10 +36,10 @@ jobs:
       - name: Install packages
         run: |
           npm install
-          echo "${{ github.event }}"
-          echo "${{ github.event.client_payload }}"
-          echo "${{ github.event.client_payload.slides }}"
-          echo ${{ toJSON(github.event.client_payload.slides) }}
+          # echo "${{ github.event }}"
+          # echo "${{ github.event.client_payload }}"
+          # echo "${{ github.event.client_payload.slides }}"
+          # echo ${{ toJSON(github.event.client_payload.slides) }}
         shell: bash
 
       - name: Download slides as images
