@@ -1,6 +1,78 @@
 const fs = require("fs").promises;
 const path = require("path");
 
+// 各画像をbase64に変換
+async function outputBase64(inputFolder, outputDir, images) {
+  const outputFile = path.join(outputDir, `${folder}.txt`);
+
+  const base64Array = [];
+  for (const image of images) {
+    const imagePath = path.join(inputFolder, image);
+    const imageBuffer = await fs.readFile(imagePath);
+    // base64Array.push(imageBuffer.toString("base64"));
+
+    const match = imagePath.match(/_(\d+)x(\d+)\./);
+    const width = parseInt(match[1], 10);
+    const height = parseInt(match[2], 10);
+    base64Array.push(
+      width + "\n" + height + "\n" + imageBuffer.toString("base64")
+    );
+  }
+
+  // 指定フォーマットで保存
+  const output = [base64Array.length.toString(), ...base64Array].join("\n");
+
+  await fs.writeFile(outputFile, output);
+  console.log(`Converted and combined images in ${folder} to ${outputFile}`);
+}
+
+// 各画像をバイナリに変換
+async function outputBinary(inputFolder, outputDir, images) {
+  const outputFile = path.join(outputDir, `${folder}.bin`);
+
+  // ヘッダー用のバッファを作成
+  const headerBuffer = Buffer.alloc(4); // ページ数用の4バイト
+  headerBuffer.writeUInt32LE(images.length); // ページ数を書き込み
+
+  // ページ情報用のバッファを作成
+  const pageInfoSize = images.length * 16; // 各ページ4つの4バイト情報
+  const pageInfoBuffer = Buffer.alloc(pageInfoSize);
+
+  // 画像データを読み込んでバッファの配列を作成
+  const imageBuffers = [];
+  let currentOffset = 4 + pageInfoSize; // ヘッダー + ページ情報の後のオフセット
+
+  // 各画像のページ情報とバッファを準備
+  for (let i = 0; i < images.length; i++) {
+    const imagePath = path.join(inputFolder, images[i]);
+    const imageBuffer = await fs.readFile(imagePath);
+    imageBuffers.push(imageBuffer);
+
+    const match = imagePath.match(/_(\d+)x(\d+)\./);
+    const width = parseInt(match[1], 10);
+    const height = parseInt(match[2], 10);
+
+    const offset = i * 16; // ページ情報は16バイトごと
+    pageInfoBuffer.writeUInt32LE(currentOffset, offset); // データオフセット
+    pageInfoBuffer.writeUInt32LE(imageBuffer.length, offset + 4); // データサイズ
+    pageInfoBuffer.writeUInt32LE(width, offset + 8); // テクスチャの幅
+    pageInfoBuffer.writeUInt32LE(height, offset + 12); // テクスチャの高さ
+
+    currentOffset += imageBuffer.length;
+  }
+
+  // 全てのバッファを結合
+  const finalBuffer = Buffer.concat([
+    headerBuffer,
+    pageInfoBuffer,
+    ...imageBuffers,
+  ]);
+
+  // バイナリファイルとして保存
+  await fs.writeFile(outputFile, finalBuffer);
+  console.log(`Combined binary images in ${folder} to ${outputFile}`);
+}
+
 async function combineImagesBase64() {
   const inputDir = process.env.INPUT_DIR;
   const outputDir = process.env.OUTPUT_DIR;
@@ -17,7 +89,6 @@ async function combineImagesBase64() {
 
     for (const folder of folders) {
       const inputFolder = path.join(inputDir, folder);
-      const outputFile = path.join(outputDir, `${folder}.txt`);
 
       // フォルダ内のCRNファイルを取得してソート
       const files = await fs.readdir(inputFolder);
@@ -29,28 +100,11 @@ async function combineImagesBase64() {
           return numA - numB;
         });
 
-      // 各画像をbase64に変換
-      const base64Array = [];
-      for (const image of images) {
-        const imagePath = path.join(inputFolder, image);
-        const imageBuffer = await fs.readFile(imagePath);
-        // base64Array.push(imageBuffer.toString("base64"));
+      // Base64ファイルの出力
+      outputBase64(inputFolder, outputDir, images);
 
-        const match = imagePath.match(/_(\d+)x(\d+)\./);
-        const width = parseInt(match[1], 10);
-        const height = parseInt(match[2], 10);
-        base64Array.push(
-          width + "\n" + height + "\n" + imageBuffer.toString("base64")
-        );
-      }
-
-      // 指定フォーマットで保存
-      const output = [base64Array.length.toString(), ...base64Array].join("\n");
-
-      await fs.writeFile(outputFile, output);
-      console.log(
-        `Converted and combined images in ${folder} to ${outputFile}`
-      );
+      // バイナリファイルの出力
+      outputBinary(inputFolder, outputDir, images);
     }
   } catch (error) {
     console.error("Error:", error);
