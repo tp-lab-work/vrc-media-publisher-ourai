@@ -41,7 +41,7 @@ jobs:
           node ./scripts/download-slides.js
 
       - name: Crunch images
-        uses: tp-jp/unity-export-crunched-action@main
+        uses: tp-jp/unity-export-crunched-action@v1
         with:
           input-path: ${{ env.TEMP_IMAGES }}
           output-path: ${{ env.TEMP_IMAGES_CRUNCHED }}
