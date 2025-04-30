@@ -2,7 +2,7 @@ const fs = require("fs").promises;
 const path = require("path");
 
 // 各画像をbase64に変換
-async function outputBase64(inputFolder, outputDir, images) {
+async function outputBase64(folder, inputFolder, outputDir, images) {
   const outputFile = path.join(outputDir, `${folder}.txt`);
 
   const base64Array = [];
@@ -27,7 +27,7 @@ async function outputBase64(inputFolder, outputDir, images) {
 }
 
 // 各画像をバイナリに変換
-async function outputBinary(inputFolder, outputDir, images) {
+async function outputBinary(folder, inputFolder, outputDir, images) {
   const outputFile = path.join(outputDir, `${folder}.bin`);
 
   // ヘッダー用のバッファを作成
@@ -101,10 +101,10 @@ async function combineImagesBase64() {
         });
 
       // Base64ファイルの出力
-      outputBase64(inputFolder, outputDir, images);
+      outputBase64(folder, inputFolder, outputDir, images);
 
       // バイナリファイルの出力
-      outputBinary(inputFolder, outputDir, images);
+      outputBinary(folder, inputFolder, outputDir, images);
     }
   } catch (error) {
     console.error("Error:", error);
