@@ -50,7 +50,7 @@ jobs:
           unity-license: ${{ secrets.UNITY_LICENSE }}
           unity-version: "2022.3.22f1"
           max-size: "2048"
-          compression-quality: ${{ vars.COMPRESSION_QUALITY }}
+          compression-quality: "50"
 
       - name: Upload crunched images
         uses: actions/upload-artifact@v4
