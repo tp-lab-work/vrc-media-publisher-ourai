@@ -18,6 +18,7 @@ async function downloadSlides() {
   for (const config of slidesConfig) {
     const { type, url } = config;
 
+    console.log("::group::[${type}]スライドの処理");
     const presentationId = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)[1];
     const presentation = await slides.presentations.get({ presentationId });
     await sleep(1000);
@@ -40,9 +41,14 @@ async function downloadSlides() {
         buffer
       );
 
+      const current = (i + 1).toString().padStart(2, "0");
+      const total = presentation.data.slides.length.toString().padStart(2, "0");
+      console.log(`[${current}/${total}] ダウンロード完了`);
+
       // リクエストの制限を避けるためにスリープ
       await sleep(1000);
     }
+    console.log("::endgroup::");
   }
 }
 
