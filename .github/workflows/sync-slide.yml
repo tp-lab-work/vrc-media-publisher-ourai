@@ -52,12 +52,6 @@ jobs:
           max-size: "2048"
           compression-quality: "50"
 
-      - name: Upload crunched images
-        uses: actions/upload-artifact@v4
-        with:
-          name: crunched-images
-          path: ${{ env.TEMP_IMAGES_CRUNCHED }}
-
       - name: Combine images as Base64
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
