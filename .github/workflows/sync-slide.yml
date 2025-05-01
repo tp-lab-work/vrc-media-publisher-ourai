@@ -90,3 +90,15 @@ jobs:
           curl -X POST ${{ secrets.APP_URL }}/api/slides/sync/webhook \
             -H "Content-Type: application/json" \
             -d "{\"syncId\": \"${{ github.event.client_payload.syncId }}\", \"status\": \"$status\", \"error\": \"$error\"}"
+
+      - name: Upload exported images
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: ${{ env.TEMP_IMAGES }}
+
+      - name: Upload exported crunched images
+        uses: actions/upload-artifact@v4
+        with:
+          name: crunched-images
+          path: ${{ env.TEMP_IMAGES_CRUNCHED }}
