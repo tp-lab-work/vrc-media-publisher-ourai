@@ -1,90 +1,49 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const fs = require("fs");
-const path = require("path");
-const { exec } = require("child_process");
-const util = require("util");
 
-const execAsync = util.promisify(exec);
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
     keyFile: process.env.SERVICE_ACCOUNT_JSON_PATH,
-    scopes: ["https://www.googleapis.com/auth/drive.readonly"],
+    scopes: ["https://www.googleapis.com/auth/presentations.readonly"],
   });
 
-  const drive = google.drive({ version: "v3", auth });
+  const slides = google.slides({ version: "v1", auth });
   const slidesConfig = JSON.parse(process.env.SLIDES_CONFIG);
 
   for (const config of slidesConfig) {
     const { type, url } = config;
-    const fileId = url.match(/\/d\/([a-zA-Z0-9-_]+)/)[1];
-    const tempDir = path.join(process.env.TEMP_DIR, type);
 
+    const presentationId = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)[1];
+    const presentation = await slides.presentations.get({ presentationId });
+    await sleep(1000);
+
+    const tempDir = `${process.env.TEMP_DIR}/${type}`;
     await fs.promises.mkdir(tempDir, { recursive: true });
 
-    const pdfPath = path.join(tempDir, "slides.pdf");
+    for (let i = 0; i < presentation.data.slides.length; i++) {
+      const response = await slides.presentations.pages.getThumbnail({
+        presentationId,
+        pageObjectId: presentation.data.slides[i].objectId,
+      });
 
-    // PDFを取得
-    const res = await drive.files.export(
-      { fileId, mimeType: "application/pdf" },
-      { responseType: "stream" }
-    );
+      const imageUrl = response.data.contentUrl;
+      const imageResponse = await fetch(imageUrl);
+      const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
-    await new Promise((resolve, reject) => {
-      const dest = fs.createWriteStream(pdfPath);
-      res.data.on("end", resolve).on("error", reject).pipe(dest);
-    });
+      await fs.promises.writeFile(
+        `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}.png`,
+        buffer
+      );
 
-    // pdftoppm で PNG に変換
-    const outputPrefix = path.join(tempDir, "slide");
-    const cmd = `pdftoppm -png -r 150 "${pdfPath}" "${outputPrefix}"`;
-    await execAsync(cmd);
-
-    console.log(`✅ ${type}: スライドをPNGに変換しました`);
+      // リクエストの制限を避けるためにスリープ
+      await sleep(1000);
+    }
   }
 }
 
 downloadSlides();
-
-// const { GoogleAuth } = require("google-auth-library");
-// const { google } = require("googleapis");
-// const fs = require("fs");
-
-// async function downloadSlides() {
-//   const auth = new GoogleAuth({
-//     keyFile: process.env.SERVICE_ACCOUNT_JSON_PATH,
-//     scopes: ["https://www.googleapis.com/auth/presentations.readonly"],
-//   });
-
-//   const slides = google.slides({ version: "v1", auth });
-//   const slidesConfig = JSON.parse(process.env.SLIDES_CONFIG);
-
-//   for (const config of slidesConfig) {
-//     const { type, url } = config;
-
-//     const presentationId = url.match(/\/presentation\/d\/([a-zA-Z0-9-_]+)/)[1];
-//     const presentation = await slides.presentations.get({ presentationId });
-
-//     const tempDir = `${process.env.TEMP_DIR}/${type}`;
-//     await fs.promises.mkdir(tempDir, { recursive: true });
-
-//     for (let i = 0; i < presentation.data.slides.length; i++) {
-//       const response = await slides.presentations.pages.getThumbnail({
-//         presentationId,
-//         pageObjectId: presentation.data.slides[i].objectId,
-//       });
-
-//       const imageUrl = response.data.contentUrl;
-//       const imageResponse = await fetch(imageUrl);
-//       const buffer = Buffer.from(await imageResponse.arrayBuffer());
-
-//       await fs.promises.writeFile(
-//         `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}.png`,
-//         buffer
-//       );
-//     }
-//   }
-// }
-
-// downloadSlides();
