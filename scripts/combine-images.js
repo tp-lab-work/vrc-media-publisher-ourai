@@ -1,31 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
 
-// 各画像をbase64に変換
-async function outputBase64(folder, inputFolder, outputDir, images) {
-  const outputFile = path.join(outputDir, `${folder}.txt`);
-
-  const base64Array = [];
-  for (const image of images) {
-    const imagePath = path.join(inputFolder, image);
-    const imageBuffer = await fs.readFile(imagePath);
-    // base64Array.push(imageBuffer.toString("base64"));
-
-    const match = imagePath.match(/_(\d+)x(\d+)\./);
-    const width = parseInt(match[1], 10);
-    const height = parseInt(match[2], 10);
-    base64Array.push(
-      width + "\n" + height + "\n" + imageBuffer.toString("base64")
-    );
-  }
-
-  // 指定フォーマットで保存
-  const output = [base64Array.length.toString(), ...base64Array].join("\n");
-
-  await fs.writeFile(outputFile, output);
-  console.log(`Converted and combined images in ${folder} to ${outputFile}`);
-}
-
 // 各画像をバイナリに変換
 async function outputBinary(folder, inputFolder, outputDir, images) {
   const outputFile = path.join(outputDir, `${folder}.bin`);
@@ -99,9 +74,6 @@ async function combineImagesBase64() {
           const numB = parseInt(b.match(/\d+/)[0]);
           return numA - numB;
         });
-
-      // Base64ファイルの出力
-      outputBase64(folder, inputFolder, outputDir, images);
 
       // バイナリファイルの出力
       outputBinary(folder, inputFolder, outputDir, images);

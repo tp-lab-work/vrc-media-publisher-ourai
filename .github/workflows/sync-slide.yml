@@ -52,14 +52,14 @@ jobs:
           max-size: "2048"
           compression-quality: "50"
 
-      - name: Combine images as Base64
+      - name: Combine images
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
           OUTPUT_DIR: "./public/slides"
         run: |
           mkdir -p $OUTPUT_DIR
           rm -rf $OUTPUT_DIR/*
-          node ./scripts/combine-images-base64.js
+          node ./scripts/combine-images.js
 
       - name: Check for changes
         run: |
