@@ -2,7 +2,10 @@ const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const fs = require("fs");
 const path = require("path");
-const { convert } = require("pdf-poppler");
+const { exec } = require("child_process");
+const util = require("util");
+
+const execAsync = util.promisify(exec);
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
@@ -22,12 +25,9 @@ async function downloadSlides() {
 
     const pdfPath = path.join(tempDir, "slides.pdf");
 
-    // PDFをDrive API経由で取得
+    // PDFを取得
     const res = await drive.files.export(
-      {
-        fileId,
-        mimeType: "application/pdf",
-      },
+      { fileId, mimeType: "application/pdf" },
       { responseType: "stream" }
     );
 
@@ -36,15 +36,12 @@ async function downloadSlides() {
       res.data.on("end", resolve).on("error", reject).pipe(dest);
     });
 
-    // PDF → PNGに変換
-    await convert(pdfPath, {
-      format: "png",
-      out_dir: tempDir,
-      out_prefix: "slide",
-      resolution: 150,
-    });
+    // pdftoppm で PNG に変換
+    const outputPrefix = path.join(tempDir, "slide");
+    const cmd = `pdftoppm -png -r 150 "${pdfPath}" "${outputPrefix}"`;
+    await execAsync(cmd);
 
-    console.log(`✅ ${type}: スライドをPNGとして保存しました。`);
+    console.log(`✅ ${type}: スライドをPNGに変換しました`);
   }
 }
 
