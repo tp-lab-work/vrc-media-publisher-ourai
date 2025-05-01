@@ -40,6 +40,12 @@ jobs:
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
+      - name: Upload exported images
+        uses: actions/upload-artifact@v4
+        with:
+          name: images
+          path: ${{ env.TEMP_IMAGES }}
+
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
         with:
