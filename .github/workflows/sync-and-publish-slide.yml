@@ -18,52 +18,68 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  sync-and-build:
+  download:
     runs-on: ubuntu-latest
     outputs:
-      has-changes: ${{ steps.check-changes.outputs.has_changes }}
+      job-status: ${{ job.status }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Create service account JSON file
-        run: |
-          echo '${{ secrets.SERVICE_ACCOUNT_JSON }}' > service-account.json
-
-      - name: Set up Node.js
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
 
-      - name: Install packages
-        run: |
-          npm install
-        shell: bash
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Notify download start
+      - name: Notify start
         uses: ./.github/actions/notify-step
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
           step: download
 
-      - name: Download slides as images
+      - name: Download slides
         env:
-          SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
+          SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
           SLIDES_CONFIG: ${{ toJSON(github.event.client_payload.slides) }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
         run: |
+          echo "$SERVICE_ACCOUNT_JSON" > service-account.json
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
-      - name: Notify compress start
+      - name: Upload raw images
+        uses: actions/upload-artifact@v4
+        with:
+          name: raw-images
+          path: ${{ env.TEMP_IMAGES }}
+          retention-days: 1
+
+  process:
+    needs: download
+    runs-on: ubuntu-latest
+    outputs:
+      job-status: ${{ job.status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download raw images
+        uses: actions/download-artifact@v4
+        with:
+          name: raw-images
+          path: ${{ env.TEMP_IMAGES }}
+
+      - name: Notify crunch start
         uses: ./.github/actions/notify-step
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
-          step: compress
+          step: crunch
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
@@ -93,6 +109,31 @@ jobs:
           rm -rf $OUTPUT_DIR/*
           node ./scripts/combine-images.js
 
+      - name: Upload processed content
+        uses: actions/upload-artifact@v4
+        with:
+          name: processed-content
+          path: public
+          retention-days: 1
+
+  commit:
+    needs: process
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+      job-status: ${{ job.status }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Download processed content
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-content
+          path: public
+
       - name: Notify commit start
         uses: ./.github/actions/notify-step
         with:
@@ -100,22 +141,37 @@ jobs:
           sync-id: ${{ github.event.client_payload.syncId }}
           step: commit
 
-      - name: Check for changes
-        id: check-changes
+      - name: Check and commit changes
+        id: check
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
-
           git add --all
-
           if ! git diff-index --quiet HEAD --; then
             git commit -m "Update slides"
             git push
             echo "has_changes=true" >> $GITHUB_OUTPUT
           else
-            echo "No changes to commit."
+            echo "No changes detected"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
+
+  deploy:
+    needs: commit
+    if: needs.commit.outputs.has_changes == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    outputs:
+      job-status: ${{ job.status }}
+      page-url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Download processed content
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-content
+          path: public
 
       - name: Notify deploy start
         uses: ./.github/actions/notify-step
@@ -124,39 +180,34 @@ jobs:
           sync-id: ${{ github.event.client_payload.syncId }}
           step: deploy
 
-  deploy:
-    needs: sync-and-build
-    if: needs.sync-and-build.outputs.has-changes == 'true'
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "./public"
+          path: public
 
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-  notify:
-    needs: [sync-and-build, deploy]
+  notify-result:
+    needs: [download, process, commit, deploy]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: Notify completion
         run: |
-          if [[ "${{ needs.sync-and-build.result }}" != "success" ]]; then
+          if [[ "${{ needs.download.result }}" != "success" ]]; then
             status="failed"
-            error="Build failed: ${{ needs.sync-and-build.result }}"
+            error="Download failed: ${{ needs.download.result }}"
+          elif [[ "${{ needs.process.result }}" != "success" ]]; then
+            status="failed"
+            error="Process failed: ${{ needs.process.result }}"
+          elif [[ "${{ needs.commit.result }}" != "success" ]]; then
+            status="failed"
+            error="Commit failed: ${{ needs.commit.result }}"
           elif [[ "${{ needs.deploy.result }}" != "success" && "${{ needs.deploy.result }}" != "skipped" ]]; then
             status="failed"
             error="Deploy failed: ${{ needs.deploy.result }}"
