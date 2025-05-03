@@ -47,12 +47,12 @@ jobs:
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
-      - name: Notify crunch start
+      - name: Notify compress start
         uses: ./.github/actions/notify-step
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
-          step: crunch
+          step: compress
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
