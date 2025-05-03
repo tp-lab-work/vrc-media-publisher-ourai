@@ -31,6 +31,12 @@ jobs:
           npm install
         shell: bash
 
+      - name: Notify step
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+            -H "Content-Type: application/json" \
+            -d '{"step": "download"}'
+
       - name: Download slides as images
         env:
           SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
@@ -39,6 +45,12 @@ jobs:
         run: |
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
+
+      - name: Notify step
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+            -H "Content-Type: application/json" \
+            -d '{"step": "crunch"}'
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
@@ -52,6 +64,12 @@ jobs:
           max-size: "2048"
           compression-quality: "50"
 
+      - name: Notify step
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+            -H "Content-Type: application/json" \
+            -d '{"step": "combine"}'
+
       - name: Combine images
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
@@ -60,6 +78,12 @@ jobs:
           mkdir -p $OUTPUT_DIR
           rm -rf $OUTPUT_DIR/*
           node ./scripts/combine-images.js
+
+      - name: Notify step
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+            -H "Content-Type: application/json" \
+            -d '{"step": "commit"}'
 
       - name: Check for changes
         run: |
@@ -75,12 +99,18 @@ jobs:
             echo "No changes to commit."
           fi
 
+      - name: Notify step
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+            -H "Content-Type: application/json" \
+            -d '{"step": "commit"}'
+
       - name: Notify completion
         if: always()
         run: |
           status="${{ job.status == 'success' && 'completed' || 'failed' }}"
           error="${{ job.status != 'success' && job.status || '' }}"
 
-          curl -X POST ${{ secrets.APP_URL }}/api/slides/sync/webhook \
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/status \
             -H "Content-Type: application/json" \
-            -d "{\"syncId\": \"${{ github.event.client_payload.syncId }}\", \"status\": \"$status\", \"error\": \"$error\"}"
+            -d "{\"status\": \"$status\", \"errorMessage\": \"$error\"}"
