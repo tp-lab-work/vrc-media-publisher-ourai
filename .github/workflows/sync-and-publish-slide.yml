@@ -36,11 +36,10 @@ jobs:
         run: npm ci
 
       - name: Notify start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: download
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"download\"}"
 
       - name: Download slides
         env:
@@ -76,11 +75,10 @@ jobs:
           path: ${{ env.TEMP_IMAGES }}
 
       - name: Notify crunch start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: compress
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"compress\"}"
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
@@ -95,11 +93,10 @@ jobs:
           compression-quality: "50"
 
       - name: Notify combine start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: combine
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"combine\"}"
 
       - name: Combine images
         env:
@@ -134,11 +131,10 @@ jobs:
           path: public
 
       - name: Notify commit start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: commit
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"commit\"}"
 
       - name: Check and commit changes
         id: check
@@ -166,15 +162,17 @@ jobs:
       job-status: ${{ job.status }}
       page-url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Download processed content
+        uses: actions/download-artifact@v4
+        with:
+          name: processed-content
+          path: public
 
       - name: Notify deploy start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: deploy
+        run: |
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"deploy\"}"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
