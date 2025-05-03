@@ -45,6 +45,7 @@ jobs:
       - name: Download slides
         env:
           SERVICE_ACCOUNT_JSON: ${{ secrets.SERVICE_ACCOUNT_JSON }}
+          SERVICE_ACCOUNT_JSON_PATH: "./service-account.json"
           SLIDES_CONFIG: ${{ toJSON(github.event.client_payload.slides) }}
           TEMP_DIR: ${{ env.TEMP_IMAGES }}
         run: |
