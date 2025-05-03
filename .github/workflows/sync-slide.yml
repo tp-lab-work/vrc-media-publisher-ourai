@@ -21,7 +21,7 @@ jobs:
   sync-and-build:
     runs-on: ubuntu-latest
     outputs:
-      build-status: ${{ job.status }}
+      has-changes: ${{ steps.check-changes.outputs.has_changes }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -101,6 +101,7 @@ jobs:
           step: commit
 
       - name: Check for changes
+        id: check-changes
         run: |
           git config --global user.email "action@github.com"
           git config --global user.name "GitHub Action"
@@ -110,16 +111,29 @@ jobs:
           if ! git diff-index --quiet HEAD --; then
             git commit -m "Update slides"
             git push
+            echo "has_changes=true" >> $GITHUB_OUTPUT
           else
             echo "No changes to commit."
+            echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
+  deploy:
+    needs: sync-and-build
+    if: needs.sync-and-build.outputs.has-changes == 'true'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify deploy start
         uses: ./.github/actions/notify-step
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
           step: deploy
+
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -129,21 +143,28 @@ jobs:
         with:
           path: "./public"
 
-  deploy:
-    needs: sync-and-build
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
+  notify:
+    needs: [sync-and-build, deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
       - name: Notify completion
-        if: always()
-        uses: ./.github/actions/notify-completion
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          job-status: ${{ needs.sync-and-build.outputs.build-status == 'success' && job.status || 'failed' }}
+        run: |
+          if [[ "${{ needs.sync-and-build.result }}" != "success" ]]; then
+            status="failed"
+            error="Build failed: ${{ needs.sync-and-build.result }}"
+          elif [[ "${{ needs.deploy.result }}" != "success" && "${{ needs.deploy.result }}" != "skipped" ]]; then
+            status="failed"
+            error="Deploy failed: ${{ needs.deploy.result }}"
+          else
+            status="completed"
+            error=""
+          fi
+
+          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/status \
+            -H "Content-Type: application/json" \
+            -d "{\"status\": \"$status\", \"errorMessage\": \"$error\"}"
