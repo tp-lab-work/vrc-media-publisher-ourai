@@ -117,6 +117,13 @@ jobs:
             echo "has_changes=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Notify deploy start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: deploy
+
   deploy:
     needs: sync-and-build
     if: needs.sync-and-build.outputs.has-changes == 'true'
@@ -125,13 +132,6 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Notify deploy start
-        uses: ./.github/actions/notify-step
-        with:
-          app-url: ${{ secrets.APP_URL }}
-          sync-id: ${{ github.event.client_payload.syncId }}
-          step: deploy
-
       - name: Checkout
         uses: actions/checkout@v4
 
