@@ -31,11 +31,12 @@ jobs:
           npm install
         shell: bash
 
-      - name: Notify step
-        run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
-            -H "Content-Type: application/json" \
-            -d '{"step": "download"}'
+      - name: Notify download start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: download
 
       - name: Download slides as images
         env:
@@ -46,11 +47,12 @@ jobs:
           mkdir -p $TEMP_DIR
           node ./scripts/download-slides.js
 
-      - name: Notify step
-        run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
-            -H "Content-Type: application/json" \
-            -d '{"step": "crunch"}'
+      - name: Notify crunch start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: crunch
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
@@ -64,11 +66,12 @@ jobs:
           max-size: "2048"
           compression-quality: "50"
 
-      - name: Notify step
-        run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
-            -H "Content-Type: application/json" \
-            -d '{"step": "combine"}'
+      - name: Notify combine start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: combine
 
       - name: Combine images
         env:
@@ -79,11 +82,12 @@ jobs:
           rm -rf $OUTPUT_DIR/*
           node ./scripts/combine-images.js
 
-      - name: Notify step
-        run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
-            -H "Content-Type: application/json" \
-            -d '{"step": "commit"}'
+      - name: Notify commit start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: commit
 
       - name: Check for changes
         run: |
@@ -99,18 +103,10 @@ jobs:
             echo "No changes to commit."
           fi
 
-      - name: Notify step
-        run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
-            -H "Content-Type: application/json" \
-            -d '{"step": "commit"}'
-
       - name: Notify completion
         if: always()
-        run: |
-          status="${{ job.status == 'success' && 'completed' || 'failed' }}"
-          error="${{ job.status != 'success' && job.status || '' }}"
-
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/status \
-            -H "Content-Type: application/json" \
-            -d "{\"status\": \"$status\", \"errorMessage\": \"$error\"}"
+        uses: ./.github/actions/notify-completion
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          job-status: ${{ job.status }}

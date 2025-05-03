@@ -1,0 +1,22 @@
+name: "Notify Step"
+description: "Notify step progress to API"
+
+inputs:
+  app-url:
+    description: "API endpoint base URL"
+    required: true
+  sync-id:
+    description: "Sync process ID"
+    required: true
+  step:
+    description: "Current step name"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        curl -X POST ${{ inputs.app-url }}/api/sync/${{ inputs.sync-id }}/step \
+          -H "Content-Type: application/json" \
+          -d "{\"step\": \"${{ inputs.step }}\"}"

@@ -1,0 +1,25 @@
+name: "Notify Completion"
+description: "Notify process completion to API"
+
+inputs:
+  app-url:
+    description: "API endpoint base URL"
+    required: true
+  sync-id:
+    description: "Sync process ID"
+    required: true
+  job-status:
+    description: "Job status"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        status="${{ inputs.job-status == 'success' && 'completed' || 'failed' }}"
+        error="${{ inputs.job-status != 'success' && inputs.job-status || '' }}"
+
+        curl -X POST ${{ inputs.app-url }}/api/sync/${{ inputs.sync-id }}/status \
+          -H "Content-Type: application/json" \
+          -d "{\"status\": \"$status\", \"errorMessage\": \"$error\"}"
