@@ -126,8 +126,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          token: ${{ secrets.PAT_TOKEN }}
 
       - name: Download processed content
         uses: actions/download-artifact@v4
@@ -168,11 +166,8 @@ jobs:
       job-status: ${{ job.status }}
       page-url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Download processed content
-        uses: actions/download-artifact@v4
-        with:
-          name: processed-content
-          path: public
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Notify deploy start
         uses: ./.github/actions/notify-step
