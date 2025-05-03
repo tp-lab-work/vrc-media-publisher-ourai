@@ -1,16 +1,27 @@
-name: Sync Slide
+name: Sync and Deploy Slide
 
 on:
   repository_dispatch:
     types: [sync-slides]
 
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
 env:
   TEMP_IMAGES: temp-images
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
 
+concurrency:
+  group: "sync"
+  cancel-in-progress: false
+
 jobs:
-  sync-slide:
+  sync-and-build:
     runs-on: ubuntu-latest
+    outputs:
+      build-status: ${{ job.status }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -103,10 +114,36 @@ jobs:
             echo "No changes to commit."
           fi
 
+      - name: Notify deploy start
+        uses: ./.github/actions/notify-step
+        with:
+          app-url: ${{ secrets.APP_URL }}
+          sync-id: ${{ github.event.client_payload.syncId }}
+          step: deploy
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "./public"
+
+  deploy:
+    needs: sync-and-build
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
       - name: Notify completion
         if: always()
         uses: ./.github/actions/notify-completion
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
-          job-status: ${{ job.status }}
+          job-status: ${{ needs.sync-and-build.outputs.build-status == 'success' && job.status || 'failed' }}
