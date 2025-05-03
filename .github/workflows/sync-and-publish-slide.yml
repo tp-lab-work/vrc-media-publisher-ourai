@@ -80,7 +80,7 @@ jobs:
         with:
           app-url: ${{ secrets.APP_URL }}
           sync-id: ${{ github.event.client_payload.syncId }}
-          step: crunch
+          step: compress
 
       - name: Crunch images
         uses: tp-jp/unity-export-crunched-action@v1
