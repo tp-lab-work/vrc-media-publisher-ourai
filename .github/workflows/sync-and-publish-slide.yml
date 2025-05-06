@@ -12,6 +12,7 @@ permissions:
 env:
   TEMP_IMAGES: temp-images
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
+  OUTPUT_DIR: public/slides
 
 concurrency:
   group: "sync"
@@ -101,9 +102,8 @@ jobs:
       - name: Combine images
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
-          OUTPUT_DIR: "./public/slides"
+          OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
         run: |
-          mkdir -p $OUTPUT_DIR
           rm -f $OUTPUT_DIR/*.bin
           node ./scripts/combine-images.js
 
@@ -123,6 +123,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Clean output directory
+        env:
+          OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
+        run: |
+          rm -f $OUTPUT_DIR/*.bin
 
       - name: Download processed content
         uses: actions/download-artifact@v4
