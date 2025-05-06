@@ -37,7 +37,7 @@ jobs:
 
       - name: Notify start
         run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/step \
           -H "Content-Type: application/json" \
           -d "{\"step\": \"download\"}"
 
@@ -76,7 +76,7 @@ jobs:
 
       - name: Notify crunch start
         run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/step \
           -H "Content-Type: application/json" \
           -d "{\"step\": \"compress\"}"
 
@@ -94,7 +94,7 @@ jobs:
 
       - name: Notify combine start
         run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/step \
           -H "Content-Type: application/json" \
           -d "{\"step\": \"combine\"}"
 
@@ -132,7 +132,7 @@ jobs:
 
       - name: Notify commit start
         run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/step \
           -H "Content-Type: application/json" \
           -d "{\"step\": \"commit\"}"
 
@@ -170,7 +170,7 @@ jobs:
 
       - name: Notify deploy start
         run: |
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/step \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/step \
           -H "Content-Type: application/json" \
           -d "{\"step\": \"deploy\"}"
 
@@ -210,6 +210,6 @@ jobs:
             error=""
           fi
 
-          curl -X POST ${{ secrets.APP_URL }}/api/sync/${{ github.event.client_payload.syncId }}/status \
+          curl -X POST ${{ secrets.APP_URL }}/api/public/sync/${{ github.event.client_payload.syncId }}/status \
             -H "Content-Type: application/json" \
             -d "{\"status\": \"$status\", \"errorMessage\": \"$error\"}"
