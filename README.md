@@ -1,1 +1,1 @@
-# vrc-slide-publisher
+# vrc-media-publisher
