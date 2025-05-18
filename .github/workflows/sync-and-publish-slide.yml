@@ -12,7 +12,7 @@ permissions:
 env:
   TEMP_IMAGES: temp-images
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
-  OUTPUT_DIR: public/slides
+  OUTPUT_DIR: public/${{ vars.SLIDES_SUBDIR || 'slides' }}
 
 concurrency:
   group: "sync"
