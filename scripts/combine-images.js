@@ -1,8 +1,14 @@
 const fs = require("fs").promises;
 const path = require("path");
 
+// テクスチャ設定フラグ
+const TextureFlags = {
+  MIPMAP: 1 << 0, // 0b00000001
+};
+
 // 各画像をバイナリに変換
 async function outputBinary(folder, inputFolder, outputDir, images) {
+  const mipmapEnabled = process.env.MIPMAP_ENABLED === "true";
   const outputFile = path.join(outputDir, `${folder}.bin`);
 
   // ヘッダー用のバッファを作成
@@ -26,12 +32,17 @@ async function outputBinary(folder, inputFolder, outputDir, images) {
     const match = imagePath.match(/_(\d+)x(\d+)\./);
     const width = parseInt(match[1], 10);
     const height = parseInt(match[2], 10);
+    let textureFlags = 0;
+    if (mipmapEnabled) {
+      textureFlags |= TextureFlags.MIPMAP;
+    }
 
     const offset = i * 16; // ページ情報は16バイトごと
     pageInfoBuffer.writeUInt32LE(currentOffset, offset); // データオフセット
     pageInfoBuffer.writeUInt32LE(imageBuffer.length, offset + 4); // データサイズ
-    pageInfoBuffer.writeUInt32LE(width, offset + 8); // テクスチャの幅
-    pageInfoBuffer.writeUInt32LE(height, offset + 12); // テクスチャの高さ
+    pageInfoBuffer.writeUInt16LE(width, offset + 8); // テクスチャの幅
+    pageInfoBuffer.writeUInt16LE(height, offset + 10); // テクスチャの高さ
+    pageInfoBuffer.writeUInt32LE(textureFlags, offset + 12); // テクスチャの設定
 
     currentOffset += imageBuffer.length;
   }
@@ -48,7 +59,7 @@ async function outputBinary(folder, inputFolder, outputDir, images) {
   console.log(`Combined binary images in ${folder} to ${outputFile}`);
 }
 
-async function combineImagesBase64() {
+async function combineImages() {
   const inputDir = process.env.INPUT_DIR;
   const outputDir = process.env.OUTPUT_DIR;
 
@@ -84,4 +95,4 @@ async function combineImagesBase64() {
   }
 }
 
-combineImagesBase64();
+combineImages();
