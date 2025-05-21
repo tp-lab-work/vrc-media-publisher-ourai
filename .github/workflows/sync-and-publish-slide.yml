@@ -13,6 +13,7 @@ env:
   TEMP_IMAGES: temp-images
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
   OUTPUT_DIR: public/${{ vars.SLIDES_SUBDIR || 'slides' }}
+  MIPMAP_ENABLED: false
 
 concurrency:
   group: "sync"
@@ -90,6 +91,7 @@ jobs:
           unity-password: ${{ secrets.UNITY_PASSWORD }}
           unity-license: ${{ secrets.UNITY_LICENSE }}
           unity-version: "2022.3.22f1"
+          mipmap-enabled: ${{ env.MIPMAP_ENABLED }}
           max-size: "2048"
           compression-quality: "50"
 
@@ -103,6 +105,7 @@ jobs:
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
           OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
+          MIPMAP_ENABLED: ${{ env.MIPMAP_ENABLED }}
         run: |
           rm -f $OUTPUT_DIR/*.bin
           node ./scripts/combine-images.js
