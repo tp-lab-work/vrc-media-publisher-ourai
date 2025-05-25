@@ -12,7 +12,8 @@ permissions:
 env:
   TEMP_IMAGES: temp-images
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
-  OUTPUT_DIR: public/${{ vars.SLIDES_SUBDIR || 'slides' }}
+  PUBLIC_DIR: ${{ vars.PUBLIC_DIR || 'public' }}
+  OUTPUT_DIR: ${{ vars.PUBLIC_DIR || 'public' }}/slides
   MIPMAP_ENABLED: false
 
 concurrency:
@@ -114,7 +115,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: processed-content
-          path: public
+          path: ${{ env.PUBLIC_DIR }}
           retention-days: 1
 
   commit:
@@ -137,7 +138,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: processed-content
-          path: public
+          path: ${{ env.PUBLIC_DIR }}
 
       - name: Notify commit start
         run: |
@@ -175,7 +176,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: processed-content
-          path: public
+          path: ${{ env.PUBLIC_DIR }}
 
       - name: Notify deploy start
         run: |
@@ -189,7 +190,7 @@ jobs:
       - name: Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: public
+          path: ${{ env.PUBLIC_DIR }}
 
       - name: Deploy to GitHub Pages
         id: deployment
