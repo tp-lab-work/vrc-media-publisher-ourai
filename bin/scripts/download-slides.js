@@ -36,8 +36,14 @@ async function downloadSlides() {
       const imageResponse = await fetch(imageUrl);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
+      // 画像サイズを取得
+      const metadata = await sharp(buffer).metadata();
+      const dimensions = `${metadata.width}x${metadata.height}`;
+
       await fs.promises.writeFile(
-        `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}.png`,
+        `${tempDir}/slide-${(i + 1)
+          .toString()
+          .padStart(3, "0")}_${dimensions}.png`,
         buffer
       );
 
