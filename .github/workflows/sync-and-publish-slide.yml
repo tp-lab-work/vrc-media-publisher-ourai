@@ -84,17 +84,31 @@ jobs:
           -d "{\"step\": \"compress\"}"
 
       - name: Crunch images
-        uses: tp-jp/unity-export-crunched-action@v1
-        with:
-          input-path: ${{ env.TEMP_IMAGES }}
-          output-path: ${{ env.TEMP_IMAGES_CRUNCHED }}
-          unity-email: ${{ secrets.UNITY_EMAIL }}
-          unity-password: ${{ secrets.UNITY_PASSWORD }}
-          unity-license: ${{ secrets.UNITY_LICENSE }}
-          unity-version: "2022.3.22f1"
-          mipmap-enabled: ${{ env.MIPMAP_ENABLED }}
-          max-size: "2048"
-          compression-quality: "50"
+        run: |
+          # サブディレクトリごとに処理
+          mkdir -p ${{ env.TEMP_IMAGES_CRUNCHED }}
+          find ${{ env.TEMP_IMAGES }} -type f -name "*.png" | while read file; do
+            # 相対パスを取得
+            rel_path=${file#${{ env.TEMP_IMAGES }}/}
+            # 出力先のサブディレクトリパスを取得
+            output_subdir=$(dirname "$rel_path")
+            # 出力先のフルパスを作成
+            full_output_dir="${{ env.TEMP_IMAGES_CRUNCHED }}/$output_subdir"
+            # 出力先ディレクトリを作成
+            mkdir -p "$full_output_dir"
+            
+            # ファイル名から拡張子を除いて.crnを付加
+            filename=$(basename "$file")
+            output_name="${filename%.*}.crn"
+            
+            # crunch.exeで処理
+            ./bin/tools/crunch.exe \
+              -file "$file" \
+              -out "$full_output_dir/$output_name" \
+              -DXT1 \
+              -yflip \
+              -mipMode None
+          done
 
       - name: Notify combine start
         run: |
