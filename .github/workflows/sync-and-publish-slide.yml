@@ -83,6 +83,9 @@ jobs:
           -H "Content-Type: application/json" \
           -d "{\"step\": \"compress\"}"
 
+      - name: Set execute permission for crunch.exe
+        run: chmod +x ./bin/tools/crunch.exe
+
       - name: Crunch images
         run: |
           # サブディレクトリごとに処理
