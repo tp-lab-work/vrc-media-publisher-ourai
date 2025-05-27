@@ -84,7 +84,7 @@ jobs:
           -d "{\"step\": \"compress\"}"
 
       - name: Set execute permission
-        run: chmod +x ./bin/tools/crunch.exe
+        run: chmod +x ./bin/tools/crunch
 
       - name: Crunch images
         run: |
@@ -105,7 +105,7 @@ jobs:
             output_name="${filename%.*}.crn"
             
             # crunch.exeで処理
-            ./bin/tools/crunch.exe \
+            ./bin/tools/crunch \
               -file "$file" \
               -out "$full_output_dir/$output_name" \
               -DXT1 \
