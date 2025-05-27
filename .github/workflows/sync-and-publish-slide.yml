@@ -100,11 +100,13 @@ jobs:
             # 出力先ディレクトリを作成
             mkdir -p "$full_output_dir"
             
+            # 画像サイズを取得
+            dimensions=$(identify -format "%wx%h" "$file")
+            
             # ファイル名から拡張子を除いて.crnを付加
             filename=$(basename "$file")
-            output_name="${filename%.*}.crn"
+            output_name="${filename%.*}_${dimensions}.crn"
             
-            # crunch.exeで処理
             ./bin/tools/crunch \
               -file "$file" \
               -out "$full_output_dir/$output_name" \
