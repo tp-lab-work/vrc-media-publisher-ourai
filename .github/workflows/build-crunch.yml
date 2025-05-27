@@ -33,4 +33,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crunch-linux-x64
-          path: bin/tools/crunch-linux-x64
+          path: crunch/build/crunch
