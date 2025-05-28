@@ -1,10 +1,14 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const fs = require("fs");
+const { imageSize } = require("image-size");
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+// APIリクエスト間のスリープ時間
+const RATE_LIMIT_SLEEP = 250;
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
@@ -36,8 +40,14 @@ async function downloadSlides() {
       const imageResponse = await fetch(imageUrl);
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
+      // 画像サイズを取得
+      const dimensions = imageSize(buffer);
+      const dimensionsStr = `${dimensions.width}x${dimensions.height}`;
+
       await fs.promises.writeFile(
-        `${tempDir}/slide-${(i + 1).toString().padStart(3, "0")}.png`,
+        `${tempDir}/slide-${(i + 1)
+          .toString()
+          .padStart(3, "0")}_${dimensionsStr}.png`,
         buffer
       );
 
@@ -46,7 +56,7 @@ async function downloadSlides() {
       console.log(`[${current}/${total}] ダウンロード完了`);
 
       // リクエストの制限を避けるためにスリープ
-      await sleep(1000);
+      await sleep(RATE_LIMIT_SLEEP);
     }
     console.log("::endgroup::");
   }

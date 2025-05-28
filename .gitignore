@@ -10,3 +10,6 @@ temp-images-crunched
 
 # actions
 unity-export-crunched-action
+
+# google
+service-account.json

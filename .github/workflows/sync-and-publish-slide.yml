@@ -14,6 +14,8 @@ env:
   TEMP_IMAGES_CRUNCHED: temp-images-crunched
   PUBLIC_DIR: ${{ vars.PUBLIC_DIR || 'public' }}
   OUTPUT_DIR: ${{ vars.PUBLIC_DIR || 'public' }}/slides
+  CRUNCH_QUALITY: ${{ vars.CRUNCH_QUALITY || '128' }}
+  CRUNCH_MIP_MODE: ${{ vars.CRUNCH_MIP_MODE || 'UseSourceOrGenerate' }}
   MIPMAP_ENABLED: false
 
 concurrency:
@@ -53,7 +55,7 @@ jobs:
         run: |
           echo "$SERVICE_ACCOUNT_JSON" > service-account.json
           mkdir -p $TEMP_DIR
-          node ./scripts/download-slides.js
+          node bin/scripts/download-slides.js
 
       - name: Upload raw images
         uses: actions/upload-artifact@v4
@@ -84,17 +86,10 @@ jobs:
           -d "{\"step\": \"compress\"}"
 
       - name: Crunch images
-        uses: tp-jp/unity-export-crunched-action@v1
-        with:
-          input-path: ${{ env.TEMP_IMAGES }}
-          output-path: ${{ env.TEMP_IMAGES_CRUNCHED }}
-          unity-email: ${{ secrets.UNITY_EMAIL }}
-          unity-password: ${{ secrets.UNITY_PASSWORD }}
-          unity-license: ${{ secrets.UNITY_LICENSE }}
-          unity-version: "2022.3.22f1"
-          mipmap-enabled: ${{ env.MIPMAP_ENABLED }}
-          max-size: "2048"
-          compression-quality: "50"
+        env:
+          TEMP_IMAGES: ${{ env.TEMP_IMAGES }}
+          TEMP_IMAGES_CRUNCHED: ${{ env.TEMP_IMAGES_CRUNCHED }}
+        run: node bin/scripts/crunch-images.js
 
       - name: Notify combine start
         run: |
@@ -106,10 +101,11 @@ jobs:
         env:
           INPUT_DIR: ${{ env.TEMP_IMAGES_CRUNCHED }}
           OUTPUT_DIR: ${{ env.OUTPUT_DIR }}
-          MIPMAP_ENABLED: ${{ env.MIPMAP_ENABLED }}
+          CRUNCH_QUALITY: ${{ env.CRUNCH_QUALITY }}
+          CRUNCH_MIP_MODE: ${{ env.CRUNCH_MIP_MODE }}
         run: |
           rm -f $OUTPUT_DIR/*.bin
-          node ./scripts/combine-images.js
+          node bin/scripts/combine-images.js
 
       - name: Upload processed content
         uses: actions/upload-artifact@v4
