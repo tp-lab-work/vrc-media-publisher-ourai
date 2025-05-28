@@ -7,6 +7,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// APIリクエスト間のスリープ時間
+const RATE_LIMIT_SLEEP = 250;
+
 async function downloadSlides() {
   const auth = new GoogleAuth({
     keyFile: process.env.SERVICE_ACCOUNT_JSON_PATH,
@@ -53,7 +56,7 @@ async function downloadSlides() {
       console.log(`[${current}/${total}] ダウンロード完了`);
 
       // リクエストの制限を避けるためにスリープ
-      await sleep(1000);
+      await sleep(RATE_LIMIT_SLEEP);
     }
     console.log("::endgroup::");
   }
