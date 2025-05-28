@@ -12,7 +12,7 @@ const RATE_LIMIT_SLEEP = 250;
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
-    keyFile: process.env.SERVICE_ACCOUNT_JSON_PATH,
+    keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_PATH,
     scopes: ["https://www.googleapis.com/auth/presentations.readonly"],
   });
 
