@@ -16,9 +16,12 @@ async function crunchImage(inputFile, tempDir, outputDir) {
     const filename = path.basename(inputFile, ".png");
     const outputPath = path.join(fullOutputDir, `${filename}.crn`);
 
+    const quality = process.env.CRUNCH_QUALITY || "128";
+    const mipMode = process.env.CRUNCH_MIP_MODE || "UseSourceOrGenerate";
+
     // crunch の実行
     execSync(
-      `./bin/tools/crunch -file "${inputFile}" -out "${outputPath}" -DXT1 -yflip -mipMode None`
+      `./bin/tools/crunch -file "${inputFile}" -out "${outputPath}" -DXT1 -yflip -mipMode ${mipMode} -quality ${quality}`
     );
 
     return { success: true, outputPath };
