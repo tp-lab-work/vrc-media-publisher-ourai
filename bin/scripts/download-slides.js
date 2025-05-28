@@ -1,7 +1,7 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const fs = require("fs");
-const sharp = require("sharp");
+const sizeOf = require("image-size");
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -38,13 +38,13 @@ async function downloadSlides() {
       const buffer = Buffer.from(await imageResponse.arrayBuffer());
 
       // 画像サイズを取得
-      const metadata = await sharp(buffer).metadata();
-      const dimensions = `${metadata.width}x${metadata.height}`;
+      const dimensions = sizeOf(buffer);
+      const dimensionsStr = `${dimensions.width}x${dimensions.height}`;
 
       await fs.promises.writeFile(
         `${tempDir}/slide-${(i + 1)
           .toString()
-          .padStart(3, "0")}_${dimensions}.png`,
+          .padStart(3, "0")}_${dimensionsStr}.png`,
         buffer
       );
 
