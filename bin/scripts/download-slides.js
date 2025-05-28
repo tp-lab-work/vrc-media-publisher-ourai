@@ -1,6 +1,7 @@
 const { GoogleAuth } = require("google-auth-library");
 const { google } = require("googleapis");
 const fs = require("fs");
+const sharp = require("sharp");
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
