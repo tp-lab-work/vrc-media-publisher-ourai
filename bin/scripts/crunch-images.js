@@ -27,6 +27,30 @@ async function crunchImage(inputFile, tempDir, outputDir) {
   }
 }
 
+/**
+ * 指定されたディレクトリ内のPNGファイルを再帰的に検索
+ * @param {string} dir - 検索対象のディレクトリパス
+ * @returns {Promise<string[]>} - 見つかったPNGファイルのパスの配列
+ */
+async function findPngFiles(dir) {
+  const files = await fs.readdir(dir, { withFileTypes: true });
+  const pngFiles = await Promise.all(
+    files.map(async (file) => {
+      const fullPath = path.join(dir, file.name);
+      if (file.isDirectory()) {
+        return findPngFiles(fullPath);
+      } else if (
+        file.isFile() &&
+        path.extname(file.name).toLowerCase() === ".png"
+      ) {
+        return [fullPath];
+      }
+      return [];
+    })
+  );
+  return pngFiles.flat();
+}
+
 async function main() {
   const inputDir = process.env.TEMP_IMAGES;
   const outputDir = process.env.TEMP_IMAGES_CRUNCHED;
