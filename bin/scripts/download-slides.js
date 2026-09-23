@@ -8,7 +8,7 @@ function sleep(ms) {
 }
 
 // APIリクエスト間のスリープ時間
-const RATE_LIMIT_SLEEP = 250;
+const RATE_LIMIT_SLEEP = 1200;
 
 async function downloadSlides() {
   const auth = new GoogleAuth({
